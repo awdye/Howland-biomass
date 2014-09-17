@@ -23,10 +23,13 @@ hw.field.data$convha<-as.numeric(as.character(hw.field.data$convha))
 #AD: These equations give biomass in kilograms, correct?
 bm.eqs<-read.table("biomass_coeff.csv", header=T,sep=",")
 
-dim(unique(subset(hw.field.data, select=tree, site=="HOW1")))
-unique(subset(ab.hw.all, select=tree, site=="HOW1"))
+dim(unique(subset(hw.field.data, select=trees, site=="HOW1")))
+unique(subset(ab.hw.all, select=trees, site=="HOW1"))
 subset(hw.field.data, site=="HOW1")
 
+#total biomass of tree in 2013 based on dbh
+hw.field.data<-merge(hw.field.data, bm.eqs.sp, by="species")
+hw.field.data$totAB<-hw.field.data$a*(hw.field.data$dbh)^hw.field.data$b
 
 # Function for current biomass
 # al.eq is a data.frame with coefficients (a & b) for alometric equations of
@@ -120,7 +123,8 @@ n.trees$year<-as.numeric(as.character(row.names(n.trees)))
 plot(n.trees[,5])
 n.trees[is.na(n.trees)]=0
 
-
+write.csv(hw.field.data, file = "Rfielddata.csv")
+write.csv(ab.hw.all, file = "annABdata.csv")
 
 #Calculations END HERE
 #From here on it's JUST GRAPHS
@@ -135,24 +139,24 @@ p<-ggplot(data=ab.hw.all,aes(x=year, y=annAB.ha,color=species))
 p+geom_point(size=1)+facet_wrap(~site)
 
 lineplot.CI(x.factor=year,response=annAB.ha,group=site,
-            data=subset(ab.hw.all,site!="HW4"&year>1960))
+            data=subset(ab.hw.all,site!="HOW1"&year>1960))
 
 lineplot.CI(x.factor=year,response=meanRW,group=species,
-            data=subset(ab.hw.all,site!="HW4"&site!="HW1"&year>1960))
+            data=subset(ab.hw.all,site!="HOW1"&site!="HOW1"&year>1960))
 
 lineplot.CI(x.factor=year,response=annAB,group=site,
-            data=subset(ab.hw.all,site!="HW4"&year>1960))
+            data=subset(ab.hw.all,site!="HOW1"&year>1960))
 
 
 tot.ab.ha<-lineplot.CI(x.factor=year,response=annAB,group=site,
-                       data=subset(ab.hw.all,site!="HW4"&year>1960),fun=sum.fn,
+                       data=subset(ab.hw.all,site!="HOW1"&year>1960),fun=sum.fn,
                        ylab="",xlab="")
 axis(1,at=seq(1,60,5),labels=F)
 mtext(side=1,"Year",line=2)
 mtext(side=2,"Annual above-ground biomass (kg/ha)",line=2)
 
 
-ggplot(data=subset(ab.hw.all,site!="HW4"),
+ggplot(data=subset(ab.hw.all,site!="HOW1"),
        aes(y = annAB, x = year,color=site)) +
   stat_summary(fun.y = 'sum', fun.ymin = function(x) 0, geom = 'point',
                aes(fill =site), position = 'dodge',
